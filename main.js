@@ -1,6 +1,6 @@
 var ACCELERATION = 1000000;
-var GRAVITY_INTENSITY = 10;
-var MAX_SPEED = 1000;
+var GRAVITY_INTENSITY = 20;
+var MAX_SPEED = 2000;
 
 var ASSET_MANAGER = new AssetManager();
 
@@ -106,8 +106,8 @@ Cannon.prototype.createProjectile = function() {
 				  y: Math.sin(-this.angle * Math.PI / 180) * 1000 + this.y};
 	var dir = direction(target, this);
 
-	projectile.x = this.x;
-	projectile.y = this.y;
+	projectile.x = this.x;// + 50 * Math.cos(-this.angle * Math.PI / 180);
+	projectile.y = this.y;// + 50 * Math.sin(-this.angle * Math.PI / 180);
 
 	projectile.velocity.x = dir.x * projectile.maxSpeed;
 	projectile.velocity.y = dir.y * projectile.maxSpeed;
@@ -147,20 +147,20 @@ Projectile.prototype.update = function() {
 
 	if (this.x + 100 < 0 || this.x - 100 > 800 ||
 		this.y + 100 < 0 || this.y - 100 > 800) {
-		this.game.cannon.adjust = "Edge";
+		this.game.theCannon.adjust = "Edge";
 		this.removeFromWorld = true;
 	}
 
 	for (var i = 0; i < this.game.planets.length; i++) {
 		var entity = this.game.planets[i];
 		if (collide(this, entity)) {
-			this.game.cannon.adjust = "Planet";
+			this.game.theCannon.adjust = "Planet";
 			this.removeFromWorld = true;
 		}
 	}
 
 	if (this.removeFromWorld) {
-		this.game.cannon.fire = true;
+		this.game.theCannon.fire = true;
 	}
 
 	Entity.prototype.update.call(this);
@@ -230,8 +230,8 @@ ASSET_MANAGER.downloadAll(function () {
 	var gameEngine = new GameEngine();
 	gameEngine.init(ctx);
 	gameEngine.start();
-	gameEngine.cannon = new Cannon(gameEngine);
+	gameEngine.theCannon = new Cannon(gameEngine);
 
 	gameEngine.addEntity(new Planet(gameEngine));
-	gameEngine.addEntity(gameEngine.cannon);
+	gameEngine.addEntity(gameEngine.theCannon);
 });

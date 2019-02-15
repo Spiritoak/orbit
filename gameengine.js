@@ -10,9 +10,9 @@ window.requestAnimFrame = (function () {
 })();
 
 function GameEngine() {
-	this.other = [];
 	this.projectiles = [];
 	this.planets = [];
+	this.cannon = [];
 	this.ctx = null;
 	this.surfaceWidth = null;
 	this.surfaceHeight = null;
@@ -43,8 +43,8 @@ GameEngine.prototype.addEntity = function (entity) {
 	if (entity.name === "Planet") {
 		this.planets.push(entity);
 	}
-	else {
-		this.other.push(entity);
+	if (entity.name === "Cannon") {
+		this.cannon.push(entity);
 	}
 }
 
@@ -55,13 +55,11 @@ GameEngine.prototype.draw = function () {
 	for (var i = 0; i < this.projectiles.length; i++) {
 		this.projectiles[i].draw(this.ctx);
 	}
-
 	for (var i = 0; i < this.planets.length; i++) {
 		this.planets[i].draw(this.ctx);
 	}
-
-	for (var i = 0; i < this.other.length; i++) {
-		this.other[i].draw(this.ctx);
+	for (var i = 0; i < this.cannon.length; i++) {
+		this.cannon[i].draw(this.ctx);
 	}
 
 	this.ctx.restore();
@@ -94,11 +92,11 @@ GameEngine.prototype.update = function () {
 		}
 	}
 
-	count = this.other.length;
+	count = this.cannon.length;
 	for (var i = 0; i < count; i++) {
-		var entity = this.other[i];
+		var entity = this.cannon[i];
 		if (entity.removeFromWorld) {
-			this.other.splice(i, 1);
+			this.cannon.splice(i, 1);
 			i--;
 			count--;
 		}
