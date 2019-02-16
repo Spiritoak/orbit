@@ -38,7 +38,7 @@ function Cannon(game) {
 	this.fire = true;
 	this.adjust = "None";
 	this.previous = "None";
-	this.adjustNum = 1;
+	this.adjustNum = 0;
 
 	this.game = game;
 	this.ctx = game.ctx;
@@ -49,37 +49,38 @@ Cannon.prototype = new Entity(this);
 Cannon.prototype.constructor = Cannon;
 
 Cannon.prototype.update = function() {
-	if ((this.adjust === "Edge" && this.angle < 90) ||
-		(this.adjust === "Planet" && this.angle >= 90)) {
+	if ((this.adjust === "Edge" && this.angle < 90 && this.angle > 0) ||
+		(this.adjust === "Planet" && this.angle >= 90 && this.angle < 180)) {
 		this.adjust = "None";
 		if (this.previous === "Right") {
 			this.adjustNum++;
 		}
 		this.previous = "Left";
-		this.angle += (1 * 1 / this.adjustNum);
+		this.angle += (1 * 1 / Math.pow(2, this.adjustNum));
 		console.log("Adjusting to the left...");
 	}
-	if ((this.adjust === "Edge" && this.angle >= 90) ||
-		(this.adjust === "Planet" && this.angle < 90)) {
+	if ((this.adjust === "Edge" && this.angle >= 90 && this.angle < 180) ||
+		(this.adjust === "Planet" && this.angle < 90 && this.angle > 0)) {
 		this.adjust = "None";
 		if (this.previous === "Left") {
 			this.adjustNum++;
 		}
 		this.previous = "Right";
-		this.angle -= (1 * 1 / this.adjustNum);
+		this.angle -= (1 * 1 / Math.pow(2, this.adjustNum));
 		console.log("Adjusting to the right...");
+	}
+
+	if (this.angle > 180) {
+		this.angle = 0;
+	}
+	else if (this.angle < 0) {
+		this.angle = 0;
 	}
 
 	if (this.fire) {
 		this.fire = false;
 		console.log("Firing at angle: " + this.angle);
 		this.createProjectile();
-	}
-	if (this.angle > 180) {
-		this.angle = 0;
-	}
-	else if (this.angle < 0) {
-		this.angle = 0;
 	}
 }
 
@@ -184,7 +185,7 @@ function Planet(game) {
 	this.name = "Planet";
 	this.x = 400;
 	this.y = 400;
-	this.radius = 75;
+	this.radius = 50;
 	this.angle = 0;
 
 	this.game = game;
