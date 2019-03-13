@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>SPAAAAAACE</title>
-    <script type="text/javascript" src="./assetmanager.js"></script>
-    <script type="text/javascript" src="./gameengine.js"></script>
-    <script type="text/javascript" src="./main.js"></script>
+	<meta charset="utf-8">
+	<title>SPAAAAAACE</title>
+	<script type="text/javascript" src="http://24.16.255.56:8888/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="./assetmanager.js"></script>
+	<script type="text/javascript" src="./gameengine.js"></script>
+	<script type="text/javascript" src="./main.js"></script>
 </head>
 <body>
-    <canvas id="gameWorld" width="800" height="800" style="border: 1px solid white; background: black"></canvas>
+	<center>
+	<canvas id="gameWorld" width="800" height="800" style="border: 1px solid white; background: black"></canvas>
+	<div id = "text"></div>
+	<button id="save" type="button">Save</button>
+	<button id="load" type="button">Load</button>
+	</center>
 </body>
 </html>

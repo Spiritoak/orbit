@@ -2,8 +2,6 @@ var ACCELERATION = 1000000;
 var GRAVITY_INTENSITY = 20;
 var MAX_SPEED = 2000;
 
-var ASSET_MANAGER = new AssetManager();
-
 function distance(a, b) {
 	var dx = a.x - b.x;
 	var dy = a.y - b.y;
@@ -26,6 +24,72 @@ function randomInt(n) {
 }
 
 /* ================================================================================ */
+// socket.io Stuff
+/* ================================================================================ */
+
+window.onload = function () {
+	var socket = io.connect("http://24.16.255.56:8888");
+
+	socket.on("load", function (data) {
+		console.log(data);
+
+		if (GAME_ENGINE.projectiles.length === 1) {
+			GAME_ENGINE.projectiles[0].removeFromWorld = true;
+		}
+
+		if (data.numProjectiles === 1) {
+			var projectile = new Projectile(GAME_ENGINE);
+
+			projectile.x = data.projectilePosition.x;
+			projectile.y = data.projectilePosition.y;
+
+			projectile.velocity = data.projectileVelocity;
+
+			GAME_ENGINE.addEntity(projectile);
+		}
+
+		GAME_ENGINE.theCannon.angle = data.cannonAngle;
+		GAME_ENGINE.theCannon.adjustPow = data.adjustPow;
+		GAME_ENGINE.theCannon.impact = data.previousImpact;
+		GAME_ENGINE.theCannon.previous = data.previousAdjust;
+	});
+
+	var text = document.getElementById("text");
+	var saveButton = document.getElementById("save");
+	var loadButton = document.getElementById("load");
+
+	saveButton.onclick = function () {
+		console.log("save");
+		text.innerHTML = "Saved.";
+
+		var p = GAME_ENGINE.projectiles.length;
+		pPos = {x: 0, y: 0};
+		pVel = {x: 0, y: 0};
+
+		if (p === 1) {
+			pPos = {x: GAME_ENGINE.projectiles[0].x, y: GAME_ENGINE.projectiles[0].y};
+			pVel = GAME_ENGINE.projectiles[0].velocity;
+		}
+
+		socket.emit("save", {studentname: "Brian Mathew",
+							 statename: "currentState",
+							 numProjectiles: p,
+							 projectilePosition: pPos,
+							 projectileVelocity: pVel,
+							 cannonAngle: GAME_ENGINE.theCannon.angle,
+							 adjustPow: GAME_ENGINE.theCannon.adjustPow,
+							 previousImpact: GAME_ENGINE.theCannon.impact,
+							 previousAdjust: GAME_ENGINE.theCannon.previous});
+	};
+
+	loadButton.onclick = function () {
+		console.log("load");
+		socket.emit("load", {studentname: "Brian Mathew",
+							 statename: "currentState"});
+	};
+};
+
+/* ================================================================================ */
 // Cannon and projectile
 /* ================================================================================ */
 
@@ -36,9 +100,9 @@ function Cannon(game) {
 	this.radius = 20;
 	this.angle = randomInt(180);
 	this.fire = true;
-	this.adjust = "None";
+	this.impact = "None";
 	this.previous = "None";
-	this.adjustNum = 0;
+	this.adjustPow = 0;
 
 	this.game = game;
 	this.ctx = game.ctx;
@@ -49,24 +113,29 @@ Cannon.prototype = new Entity(this);
 Cannon.prototype.constructor = Cannon;
 
 Cannon.prototype.update = function() {
-	if ((this.adjust === "Edge" && this.angle < 90 && this.angle > 0) ||
-		(this.adjust === "Planet" && this.angle >= 90 && this.angle < 180)) {
-		this.adjust = "None";
+	// console.log("Angle: " + this.angle);
+	// console.log("AdjustPow: " + this.adjustPow);
+	// console.log("impact: " + this.impact);
+	// console.log("Previous adjust: " + this.previous);
+
+	if ((this.impact === "Edge" && this.angle < 90 && this.angle > 0) ||
+		(this.impact === "Planet" && this.angle >= 90 && this.angle < 180)) {
+		this.impact = "None";
 		if (this.previous === "Right") {
-			this.adjustNum++;
+			this.adjustPow++;
 		}
 		this.previous = "Left";
-		this.angle += (1 * 1 / Math.pow(2, this.adjustNum));
+		this.angle += (1 * 1 / Math.pow(2, this.adjustPow));
 		console.log("Adjusting to the left...");
 	}
-	if ((this.adjust === "Edge" && this.angle >= 90 && this.angle < 180) ||
-		(this.adjust === "Planet" && this.angle < 90 && this.angle > 0)) {
-		this.adjust = "None";
+	if ((this.impact === "Edge" && this.angle >= 90 && this.angle < 180) ||
+		(this.impact === "Planet" && this.angle < 90 && this.angle > 0)) {
+		this.impact = "None";
 		if (this.previous === "Left") {
-			this.adjustNum++;
+			this.adjustPow++;
 		}
 		this.previous = "Right";
-		this.angle -= (1 * 1 / Math.pow(2, this.adjustNum));
+		this.angle -= (1 * 1 / Math.pow(2, this.adjustPow));
 		console.log("Adjusting to the right...");
 	}
 
@@ -107,8 +176,8 @@ Cannon.prototype.createProjectile = function() {
 				  y: Math.sin(-this.angle * Math.PI / 180) * 1000 + this.y};
 	var dir = direction(target, this);
 
-	projectile.x = this.x;// + 50 * Math.cos(-this.angle * Math.PI / 180);
-	projectile.y = this.y;// + 50 * Math.sin(-this.angle * Math.PI / 180);
+	projectile.x = this.x;
+	projectile.y = this.y;
 
 	projectile.velocity.x = dir.x * projectile.maxSpeed;
 	projectile.velocity.y = dir.y * projectile.maxSpeed;
@@ -136,6 +205,11 @@ Projectile.prototype = new Entity(this);
 Projectile.prototype.constructor = Projectile;
 
 Projectile.prototype.update = function() {
+	// console.log("X: " + this.x);
+	// console.log("Y: " + this.y);
+	// console.log("Velocity X: " + this.velocity.x);
+	// console.log("Velocity Y: " + this.velocity.y);
+
 	this.x += this.velocity.x * this.game.clockTick;
 	this.y += this.velocity.y * this.game.clockTick;
 
@@ -148,14 +222,14 @@ Projectile.prototype.update = function() {
 
 	if (this.x + 100 < 0 || this.x - 100 > 800 ||
 		this.y + 100 < 0 || this.y - 100 > 800) {
-		this.game.theCannon.adjust = "Edge";
+		this.game.theCannon.impact = "Edge";
 		this.removeFromWorld = true;
 	}
 
 	for (var i = 0; i < this.game.planets.length; i++) {
 		var entity = this.game.planets[i];
 		if (collide(this, entity)) {
-			this.game.theCannon.adjust = "Planet";
+			this.game.theCannon.impact = "Planet";
 			this.removeFromWorld = true;
 		}
 	}
@@ -223,16 +297,19 @@ Planet.prototype.draw = function() {
 // Main
 /* ================================================================================ */
 
+
+var ASSET_MANAGER = new AssetManager();
+var GAME_ENGINE = new GameEngine();
+
 ASSET_MANAGER.downloadAll(function () {
 	console.log("starting up da sheild");
 	var canvas = document.getElementById('gameWorld');
 	var ctx = canvas.getContext('2d');
 
-	var gameEngine = new GameEngine();
-	gameEngine.init(ctx);
-	gameEngine.start();
-	gameEngine.theCannon = new Cannon(gameEngine);
+	GAME_ENGINE.init(ctx);
+	GAME_ENGINE.start();
+	GAME_ENGINE.theCannon = new Cannon(GAME_ENGINE);
 
-	gameEngine.addEntity(new Planet(gameEngine));
-	gameEngine.addEntity(gameEngine.theCannon);
+	GAME_ENGINE.addEntity(new Planet(GAME_ENGINE));
+	GAME_ENGINE.addEntity(GAME_ENGINE.theCannon);
 });

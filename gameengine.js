@@ -67,6 +67,7 @@ GameEngine.prototype.draw = function () {
 
 GameEngine.prototype.update = function () {
 	var count = this.projectiles.length;
+	//console.log("Projectiles: " + count);
 	for (var i = 0; i < count; i++) {
 		var entity = this.projectiles[i];
 		if (entity.removeFromWorld) {
