@@ -33,17 +33,15 @@ window.onload = function () {
 	socket.on("load", function (data) {
 		console.log(data);
 
-		if (GAME_ENGINE.projectiles.length === 1) {
-			GAME_ENGINE.projectiles[0].removeFromWorld = true;
+		for (var i = 0; i < GAME_ENGINE.projectiles.length; i++) {
+			GAME_ENGINE.projectiles[i].removeFromWorld = true;
 		}
-
-		if (data.numProjectiles === 1) {
+		for (var i = 0; i < data.numProjectiles; i++) {
 			var projectile = new Projectile(GAME_ENGINE);
 
-			projectile.x = data.projectilePosition.x;
-			projectile.y = data.projectilePosition.y;
-
-			projectile.velocity = data.projectileVelocity;
+			projectile.x = data.projInfo[i].posX;
+			projectile.y = data.projInfo[i].posY;
+			projectile.velocity = data.projInfo[i].vel;
 
 			GAME_ENGINE.addEntity(projectile);
 		}
@@ -63,19 +61,18 @@ window.onload = function () {
 		text.innerHTML = "Saved.";
 
 		var p = GAME_ENGINE.projectiles.length;
-		pPos = {x: 0, y: 0};
-		pVel = {x: 0, y: 0};
+		proj = [];
 
-		if (p === 1) {
-			pPos = {x: GAME_ENGINE.projectiles[0].x, y: GAME_ENGINE.projectiles[0].y};
-			pVel = GAME_ENGINE.projectiles[0].velocity;
+		for (var i = 0; i < p; i++) {
+			proj[i] = {posX: GAME_ENGINE.projectiles[i].x,
+					   posY: GAME_ENGINE.projectiles[i].y,
+					   vel: GAME_ENGINE.projectiles[0].velocity};
 		}
 
 		socket.emit("save", {studentname: "Brian Mathew",
 							 statename: "currentState",
 							 numProjectiles: p,
-							 projectilePosition: pPos,
-							 projectileVelocity: pVel,
+							 projInfo: proj,
 							 cannonAngle: GAME_ENGINE.theCannon.angle,
 							 adjustPow: GAME_ENGINE.theCannon.adjustPow,
 							 previousImpact: GAME_ENGINE.theCannon.impact,
